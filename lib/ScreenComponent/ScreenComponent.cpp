@@ -75,7 +75,10 @@ void ScreenComponent::setText(char* text) {
     }
   }
 
-  m_has_changed = true;
+  // fill rest of characters with ' ' (32)
+  for (uint8_t i = data_index; i < length; i++) {
+    setCharAt(i, 32);
+  }
 }
 
 
@@ -121,22 +124,25 @@ MenuComponent::MenuComponent(
   uint8_t downArrow,
   uint8_t ellipses
 ): ScreenComponent(x,y,width,2) { // locked at a height of 2
-  m_items = new LinkedList();
+  m_items = new LinkedList<MenuItem>();
   m_line = 0;
 
   m_up_arrow = upArrow;
   m_down_arrow = downArrow;
   m_ellipses = ellipses;
+
+  setText("<EMPTY>"); // default text, as list starts empty
 }
 
 MenuComponent::~MenuComponent() {
   delete m_items;
 }
 
-void MenuComponent::addMenuItem(
-  char* name,
-  uint8_t value
-) {
+void MenuComponent::addMenuItem( char* name ) {
+  addMenuItem(name, m_items->length());
+}
+
+void MenuComponent::addMenuItem( char* name, uint8_t value ) {
   MenuItem* item = new MenuItem(name, value);
   m_items->insertItem(item);
   scrollMenuItem(0); // update text
@@ -153,6 +159,14 @@ void MenuComponent::removeMenuItem(uint8_t value) {
     }
     index++;
   }
+
+  if (m_items->length() == 0) setText("<EMPTY>"); // display empty message
+  
+  // move back up if too far down after removal
+  if (m_items->length() < m_line) {
+    m_line = m_items->length() - 1;
+  }
+  scrollMenuItem(0); // update text
 }
 
 // remove all items from list
@@ -166,6 +180,11 @@ void MenuComponent::clear() {
 }
 
 void MenuComponent::scrollMenuItem(int8_t step) {
+  if (m_items->length() == 0) { // if empty, no scrolling necessary
+    setText("<EMPTY>");
+    return;
+  }
+
   // if (step == 0) return; // don't need to do anything
   if (step < 0) {
     m_line = (m_line + step < 0) ? 0 : m_line + step;
@@ -214,10 +233,10 @@ void MenuComponent::scrollMenuItem(int8_t step) {
 }
 
 uint8_t MenuComponent::selectMenuItem() {
-  if (m_items->isEmpty()) return NULL;
+  if (m_items->isEmpty()) return -1;
   MenuItem* item = getMenuItem(m_line);
-  if (item) return NULL;
-  return item->getValue();
+  if (item) return item->getValue();
+  return -1;
 }
 
 MenuItem* MenuComponent::getMenuItem(uint16_t index) {
@@ -245,7 +264,7 @@ bool TriStateItem::isStateA() { return m_state == 0; }
 bool TriStateItem::isStateB() { return m_state == 1; }
 
 void TriStateItem::changeStateBy(int8_t change) {
-  m_state = constrain(m_state + change, 0, 2);
+  m_state = (m_state + change < 0) ? 0 : (m_state + change > 2) ? 2 : m_state + change;
 }
 
 TriStateSelectorComponent::TriStateSelectorComponent(
@@ -293,7 +312,7 @@ void TriStateSelectorComponent::setStateSymbol(uint8_t index, char symbol) {
 void TriStateSelectorComponent::scrollPointer(int8_t step) {
   uint8_t w = width()-1;
   uint8_t old_selection = m_selection;
-  m_selection = constrain(m_selection + step, 0, w);
+  m_selection = (m_selection + step < 0) ? 0 : (m_selection + step > w) ? w : m_selection + step;
 
   if (m_selection == old_selection) return; // unchanged
   updateText();

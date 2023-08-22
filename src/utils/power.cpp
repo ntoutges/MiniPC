@@ -4,22 +4,20 @@ uint16_t power_data_timeouts[POWER_PINS]; // stores what data_timers counts down
 uint16_t power_data_timers[POWER_PINS]; // counts down to 0, at which point pin *CAN* be changed
 uint8_t power_data_use[POWER_PINS]; // amount of processes using this pin
 
-uint8_t* power_flags; // if a pin is set to be turned on/off
-uint8_t* power_flags_buffer; // if a pins is currently on/off
-uint8_t* power_is_inverted;
+uint8_t* power_flags = create_flags(POWER_PINS); // if a pin is set to be turned on/off
+uint8_t* power_flags_buffer = create_flags(POWER_PINS); // if a pins is currently on/off
+uint8_t* power_is_inverted = create_flags(POWER_PINS);
 
 uint8_t power_flags_length;
 unsigned long power_old_millis;
+bool power_is_new_setting = true; // auto-init power pins
 
 void power_init(Process* process) {
+    Serial.println("init");
     pinMode(POWER_SER_PIN, OUTPUT);
     pinMode(POWER_RCLK_PIN, OUTPUT);
     pinMode(POWER_SRCLK_PIN, OUTPUT);
     digitalWrite(POWER_RCLK_PIN, HIGH);
-
-    power_flags = create_flags(POWER_PINS);
-    power_flags_buffer = create_flags(POWER_PINS);
-    power_is_inverted = create_flags(POWER_PINS);
 
     power_flags_length = get_flags_length(POWER_PINS);
 
@@ -50,7 +48,7 @@ void power_tick(unsigned long millis) {
         }
     }
 
-    if (was_change) { // shift out data
+    if (was_change || power_is_new_setting) { // shift out data
         for (uint8_t i = 0; i < power_flags_length; i++) {
             shiftOut(
                 POWER_SER_PIN,
@@ -59,26 +57,26 @@ void power_tick(unsigned long millis) {
                 power_flags_buffer[i]
             );
         }
-
         digitalWrite(POWER_RCLK_PIN, LOW);
         digitalWrite(POWER_RCLK_PIN, HIGH);
+        
+        power_is_new_setting = false;
     }
 }
 
 bool power_exit(unsigned long millis) {
-    destroy_flags(power_flags);
-    destroy_flags(power_flags_buffer);
-    destroy_flags(power_is_inverted);
+    // destroy_flags(power_flags);
+    // destroy_flags(power_flags_buffer);
+    // destroy_flags(power_is_inverted);
 }
 
 void power_set(size_t pin, bool enabled) { // not currently switching, change can occur
-    if (enabled == get_flag(power_flags, pin)) return; // no difference, so no point in changing anything
-
-    if (enabled != get_flag(power_flags_buffer, pin)) {
-        set_flag(power_flags, pin, enabled);
+    if (enabled == (get_flag(power_flags, pin) ^ get_flag(power_is_inverted, pin))) return; // no difference, so no point in changing anything
+    if (enabled != (get_flag(power_flags_buffer, pin) ^ get_flag(power_is_inverted, pin))) {
+        set_flag(power_flags, pin, enabled ^ get_flag(power_is_inverted, pin));
     }
     else { // currently waiting for switch; disable that timer, as it is no longer required
-        set_flag(power_flags, pin, enabled);
+        set_flag(power_flags, pin, enabled ^ get_flag(power_is_inverted, pin));
         power_data_timers[pin] = 0;
     }
 }
@@ -89,6 +87,7 @@ void power_init_pin(size_t pin, uint16_t timeout, bool activeLow) {
     set_flag(power_flags, pin, activeLow); // ensure all pins are off by default
     set_flag(power_is_inverted, pin, activeLow);
     power_data_timeouts[pin] = timeout;
+    power_is_new_setting = true;
 }
 
 void power_use(size_t pin) {
@@ -103,7 +102,7 @@ void power_release(size_t pin) {
 }
 
 bool power_is_enabled(size_t pin) {
-    return get_flag(power_flags_buffer, pin);
+    return get_flag(power_flags_buffer, pin) ^ get_flag(power_is_inverted, pin);
 }
 
 uint8_t power_uses(size_t pin) {

@@ -1,18 +1,22 @@
 #include "screen.h"
 
-LinkedList screen_components;
+LinkedList<ScreenComponent> screen_components;
 LiquidCrystal screen_lcd(SCREEN_RS, SCREEN_EN, SCREEN_DATA_4,SCREEN_DATA_5,SCREEN_DATA_6,SCREEN_DATA_7);
 unsigned long screen_timer;
 unsigned long screen_last_millis;
 bool screen_is_on;
 bool screen_will_on;
+uint16_t screen_state;
+
+uint8_t screen_custom_chars[8][8];
 
 void screen_init(Process* process) {
+  screen_enable();
+
   screen_lcd.begin(16,2);
   screen_lcd.print("PiCO");
-
-  screen_enable();
   screen_keep_alive();
+  screen_state = 0;
 }
 
 void screen_tick(unsigned long millis) {
@@ -60,19 +64,34 @@ bool screen_exit(unsigned long millis) {
 }
 
 void screen_add_component(ScreenComponent* component) {
+  component->setHasChanged(true); // immediately render after being added
   screen_components.insertItem(component);
 }
 
 void screen_clear() {
-  // repeatedly remove first item
+  // repeatedly remove and deallocate first item
   while (!screen_components.isEmpty()) {
     screen_components.removeItem(0);
   }
   screen_lcd.clear();
+  screen_set_state(0); // reset state
+}
+
+void screen_clear_without_dealloc() {
+  // repeatedly remove first item
+  while (!screen_components.isEmpty()) {
+    screen_components.removeItemWithoutDealloc(0);
+  }
+  screen_lcd.clear();
+  screen_set_state(0); // reset state
 }
 
 // bug: if screen turns off with custom character, custom characters are lost (volatile memory) -- these must be saved at some time
 void screen_create_char(uint8_t index, uint8_t character[8]) {
+  for (uint8_t i = 0; i < 8; i++) { // copy character into [screen_custom_chars] 
+    screen_custom_chars[index][i] = character[i];
+  }
+
   screen_lcd.createChar(index, character);
 }
 
@@ -88,6 +107,11 @@ bool screen_enable() {
   digitalWrite(SCREEN_DATA_7, LOW);
 
   screen_lcd.begin(16,2);
+
+  // copy custom characters from arduino into screen
+  for (uint8_t i = 0; i < 8; i++) {
+    screen_lcd.createChar(i, screen_custom_chars[i]);
+  }
 
   return true; // screen enable finished
 }
@@ -109,4 +133,12 @@ bool screen_disable() {
 void screen_keep_alive() {
   screen_timer = screen_last_millis + SCREEN_TIMEOUT;
   screen_will_on = true;
+}
+
+void screen_set_state(uint16_t state) {
+  screen_state = state;
+}
+
+uint16_t screen_get_state() {
+  return screen_state;
 }

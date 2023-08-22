@@ -17,7 +17,7 @@
 #define SCREEN_DATA_6 49
 #define SCREEN_DATA_7 48
 
-#define SCREEN_TIMEOUT 10000 // 10 seconds of no keep-alive signal before turning off
+#define SCREEN_TIMEOUT 60000 // 1 minute of no keep-alive signal before turning off
 
 void screen_init(Process* process);
 void screen_tick(unsigned long millis);
@@ -25,11 +25,15 @@ bool screen_exit(unsigned long millis);
 
 void screen_add_component(ScreenComponent* component);
 void screen_clear();
+void screen_clear_without_dealloc();
 void screen_create_char(uint8_t index, uint8_t character[8]);
 
 bool screen_enable();
 bool screen_disable();
 
 void screen_keep_alive(); // if not called often enough, screen will turn off
+
+void screen_set_state(uint16_t state);
+uint16_t screen_get_state();
 
 #endif

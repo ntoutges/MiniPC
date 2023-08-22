@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <LinkedList.h>
-#include <Arduino.h>
 
 class ScreenComponent {
   uint8_t m_x;
@@ -52,7 +51,7 @@ class MenuItem {
 };
 
 class MenuComponent : public ScreenComponent {
-  LinkedList* m_items;
+  LinkedList<MenuItem>* m_items;
   uint8_t m_line;
   uint8_t m_up_arrow;
   uint8_t m_down_arrow;
@@ -68,10 +67,8 @@ class MenuComponent : public ScreenComponent {
     uint8_t ellipses
   );
   ~MenuComponent();
-  void addMenuItem(
-    char* name,
-    uint8_t value
-  );
+  void addMenuItem( char* name ); // use current array length as value (only works if not removing items from array, others duplicate values bound to arrise)
+  void addMenuItem( char* name, uint8_t value );
   void removeMenuItem(uint8_t value);
   void clear();
   void scrollMenuItem(int8_t step);
