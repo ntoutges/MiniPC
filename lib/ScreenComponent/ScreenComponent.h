@@ -69,6 +69,7 @@ class MenuComponent : public ScreenComponent {
   ~MenuComponent();
   void addMenuItem( char* name ); // use current array length as value (only works if not removing items from array, others duplicate values bound to arrise)
   void addMenuItem( char* name, uint8_t value );
+  void addMenuItemBefore( char* name, uint8_t value );
   void removeMenuItem(uint8_t value);
   void clear();
   void scrollMenuItem(int8_t step);
@@ -77,6 +78,24 @@ class MenuComponent : public ScreenComponent {
 
   MenuItem* getMenuItem(uint16_t index);
 
+};
+
+class SingleMenuComponent : public ScreenComponent {
+  char** m_items;
+  uint8_t m_items_length;
+  uint8_t m_item_selected;
+
+  public:
+  SingleMenuComponent(
+    uint8_t x,
+    uint8_t y,
+    uint8_t width,
+    uint8_t height,
+    uint8_t items
+  );
+  ~SingleMenuComponent();
+  void setItem(uint8_t index, char* text);
+  void selectItem(uint8_t index);
 };
 
 class TriStateItem {

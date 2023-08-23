@@ -148,6 +148,12 @@ void MenuComponent::addMenuItem( char* name, uint8_t value ) {
   scrollMenuItem(0); // update text
 }
 
+void MenuComponent::addMenuItemBefore( char* name, uint8_t value ) {
+  MenuItem* item = new MenuItem(name, value);
+  m_items->insertItem(item, 0); // insert at front of list
+  scrollMenuItem(0); // update text
+}
+
 void MenuComponent::removeMenuItem(uint8_t value) {
   m_items->loopInit();
   uint16_t index = 0;
@@ -249,6 +255,50 @@ uint8_t MenuComponent::getLine() {
   return m_line;
 }
 
+
+SingleMenuComponent::SingleMenuComponent(
+  uint8_t x,
+  uint8_t y,
+  uint8_t width,
+  uint8_t height,
+  uint8_t items
+) : ScreenComponent(x,y, width,height) {
+  m_items = (char**) calloc(items, sizeof(char*));
+  m_items_length = items;
+  m_item_selected = 0;
+}
+
+SingleMenuComponent::~SingleMenuComponent() {
+  for (uint8_t i = 0; i < m_items_length; i++) {
+    if (m_items[i]) { free(m_items[i]); } // free individual char* elements
+  }
+  free(m_items); // free char** array
+}
+
+void SingleMenuComponent::setItem(uint8_t index, char* text) {
+  if (index >= m_items_length) return; // outside working bounds
+  
+  if (m_items[index]) { free(m_items[index]); }
+  
+  uint8_t i = 0;
+  while (text[i]) { i++; } // get length of text
+  i++;
+  // [i] now contains the size of the text (including terminating NULL)
+
+  m_items[index] = (char*) malloc(i);
+  for (uint8_t j = 0; j < i; j++) {
+    m_items[index][j] = text[j]; // copy text into allocated location
+  }
+
+  if (m_item_selected == index) { selectItem(index); } // update text if selected
+}
+
+void SingleMenuComponent::selectItem(uint8_t index) {
+  if (index >= m_items_length) return; // outside working bounds
+  m_item_selected = index;
+
+  setText(m_items[index]);
+}
 
 
 TriStateItem::TriStateItem( char symbol ) {
