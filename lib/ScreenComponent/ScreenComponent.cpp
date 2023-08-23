@@ -311,10 +311,18 @@ char TriStateItem::getSymbol() { return m_symbol; }
 
 bool TriStateItem::isNoState() { return m_state == 1; }
 bool TriStateItem::isStateA() { return m_state == 0; }
-bool TriStateItem::isStateB() { return m_state == 1; }
+bool TriStateItem::isStateB() { return m_state == 2; }
 
-void TriStateItem::changeStateBy(int8_t change) {
-  m_state = (m_state + change < 0) ? 0 : (m_state + change > 2) ? 2 : m_state + change;
+bool TriStateItem::changeStateBy(int8_t change) {
+  bool wasChange = false;;
+  // m_state = (m_state + change < 0) ? 0 : (m_state + change > 2) ? 2 : m_state + change;
+  if (m_state + change < 0) m_state = 0;
+  else if (m_state + change > 2) m_state = 2;
+  else {
+    m_state = m_state + change;
+    wasChange = true;
+  }
+  return wasChange;
 }
 
 TriStateSelectorComponent::TriStateSelectorComponent(
@@ -368,9 +376,22 @@ void TriStateSelectorComponent::scrollPointer(int8_t step) {
   updateText();
 }
 
-uint8_t TriStateSelectorComponent::changeItemState(int8_t change) {
-  m_states[m_selection]->changeStateBy(change);
+bool TriStateSelectorComponent::changeItemState(int8_t change) {
+  bool wasChange = m_states[m_selection]->changeStateBy(change);
   updateText();
+  return wasChange;
+}
+
+bool TriStateSelectorComponent::isStateA() {
+  return m_states[m_selection]->isStateA();
+}
+
+bool TriStateSelectorComponent::isStateB() {
+  return m_states[m_selection]->isStateB();
+}
+
+uint8_t TriStateSelectorComponent::getCursor() {
+  return m_selection;
 }
 
 void TriStateSelectorComponent::updateText() {

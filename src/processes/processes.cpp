@@ -81,9 +81,6 @@ void process_monitor_render(bool is_rendering) {
         screen_add_component(processes_remove_process);
         screen_add_component(processes_active_processes_count);
     }
-    else {
-        screen_clear_without_dealloc();
-    }
 }
 
 void process_monitor_update_menu() {
@@ -96,7 +93,7 @@ void process_monitor_update_menu() {
     Process* temp_process = get_process_at_index(0);
     char buffer[8];
     for (uint16_t i = 1; temp_process; i++) {
-        snprintf(buffer, 8, "0x%02x", temp_process->getId());
+        snprintf(buffer, 8, "0x%02X", temp_process->getId());
         
         // before means prepend to start of list
         processes_active_processes->addMenuItemBefore(buffer, temp_process->getId());

@@ -54,9 +54,6 @@ void home_render(bool is_rendering) {
 
         screen_add_component(home_menu);
     }
-    else {
-        screen_clear_without_dealloc();
-    }
 }
 
 void home_add_item( char* name, ProcessInfo* process ) {

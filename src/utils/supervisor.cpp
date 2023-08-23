@@ -1,5 +1,5 @@
 #include "supervisor.h"
-#include <Arduino.h>
+#include "screen.h" // this is in .cpp instead of .h to avoid circular dependencies problem (somehow...)
 
 LinkedList<Process>* supervisor_list;
 LinkedList<Process>* supervisor_exit_queue;
@@ -29,8 +29,6 @@ void supervisor_tick(unsigned long millis) {
     Process* process;
 
     // tick processes
-    // Serial.println(supervisor_list->length());
-    // delay(20);
     while (!supervisor_list->isLoopDone(1)) {
         process = (Process*)supervisor_list->loopNext(1);
         if (process->isTickable()) {
@@ -42,6 +40,7 @@ void supervisor_tick(unsigned long millis) {
     if (supervisor_curr_active_process != supervisor_next_active_process) {
         if (supervisor_curr_active_process) { // implies render function
             supervisor_curr_active_process->render(false); // stop rendering old
+            screen_clear_without_dealloc(); // clear screen and remove components from previous process
         }
 
         if (supervisor_next_active_process) {

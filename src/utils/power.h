@@ -20,7 +20,12 @@ void power_set(size_t pin, bool enabled); // DO NOT USE THIS DIRECTLY FROM ANOTH
 
 void power_use(size_t pin);
 void power_release(size_t pin);
+void power_lock(size_t pin);
+void power_unlock(size_t pin);
+
 bool power_is_enabled(size_t pin);
 uint8_t power_uses(size_t pin);
+
+bool power_is_new();
 
 #endif

@@ -112,7 +112,7 @@ class TriStateItem {
   bool isStateA();
   bool isStateB();
 
-  void changeStateBy(int8_t change);
+  bool changeStateBy(int8_t change);
 };
 
 class TriStateSelectorComponent : public ScreenComponent {
@@ -145,7 +145,12 @@ class TriStateSelectorComponent : public ScreenComponent {
   
   void setStateSymbol(uint8_t index, char symbol);
   void scrollPointer(int8_t step);
-  uint8_t changeItemState(int8_t change);
+  bool changeItemState(int8_t change);
+  
+  bool isStateA();
+  bool isStateB();
+
+  uint8_t getCursor();
 
   private:
   void updateText();

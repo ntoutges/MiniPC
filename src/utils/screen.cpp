@@ -6,6 +6,7 @@ unsigned long screen_timer;
 unsigned long screen_last_millis;
 bool screen_is_on;
 bool screen_will_on;
+bool screen_is_in_transition;
 uint16_t screen_state;
 
 uint8_t screen_custom_chars[8][8];
@@ -40,6 +41,8 @@ void screen_tick(unsigned long millis) {
     }
   }
 
+  if (!screen_is_on) return; // don't try to update the screen if it is turned off
+
   screen_components.loopInit();
   while (!screen_components.isLoopDone()) {
     ScreenComponent* component = (ScreenComponent*) screen_components.loopNext();
@@ -73,7 +76,8 @@ void screen_clear() {
   while (!screen_components.isEmpty()) {
     screen_components.removeItem(0);
   }
-  screen_lcd.clear();
+
+  if (screen_is_on) screen_lcd.clear();
   screen_set_state(0); // reset state
 }
 
@@ -82,7 +86,7 @@ void screen_clear_without_dealloc() {
   while (!screen_components.isEmpty()) {
     screen_components.removeItemWithoutDealloc(0);
   }
-  screen_lcd.clear();
+  if (screen_is_on) screen_lcd.clear();
   screen_set_state(0); // reset state
 }
 
@@ -92,12 +96,14 @@ void screen_create_char(uint8_t index, uint8_t character[8]) {
     screen_custom_chars[index][i] = character[i];
   }
 
-  screen_lcd.createChar(index, character);
+  if (screen_is_on) screen_lcd.createChar(index, character);
 }
 
 bool screen_enable() {
-  power_use(SCREEN_POWER_PIN);
+  if (!screen_is_in_transition) power_use(SCREEN_POWER_PIN);
+  screen_is_in_transition = true;
   if (!power_is_enabled(SCREEN_POWER_PIN)) return false; // waiting to turn on
+  screen_is_in_transition = false;
 
   digitalWrite(SCREEN_RS, LOW);
   digitalWrite(SCREEN_EN, LOW);
@@ -117,8 +123,10 @@ bool screen_enable() {
 }
 
 bool screen_disable() {
-  power_release(SCREEN_POWER_PIN);
+  if (!screen_is_in_transition) power_release(SCREEN_POWER_PIN);
+  screen_is_in_transition = true;
   if (power_is_enabled(SCREEN_POWER_PIN)) return false; // waiting to turn off
+  screen_is_in_transition = false;
 
   digitalWrite(SCREEN_RS, HIGH);
   digitalWrite(SCREEN_EN, HIGH);

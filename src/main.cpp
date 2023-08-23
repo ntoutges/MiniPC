@@ -5,6 +5,7 @@
 #include "processes/processes.h"
 #include "utils/inputs.h"
 #include "processes/home.h"
+#include "processes/powerManager.h"
 
 // TODO: figure out why random text starts appearing on screen (likely to do with linked list or supervisor)
 
@@ -23,35 +24,21 @@ void setup() {
 
   runProcess(
     generateProcess(
-      1,
+      50,
       screen_init,
       screen_tick,
       screen_exit
     )
   );
-
-  // ScreenComponent* text = new ScreenComponent(0,0, 8,1);
-  // text->setText("TEST!");
-  // screen_add_component(text);
-
+  
   runProcess(
     generateProcess(
-      1,
+      100,
       power_init,
       power_tick,
       power_exit
     )
   );
-
-  // generateProcess(
-  //   10,
-  //   process_monitor_init,
-  //   process_monitor_tick,
-  //   process_monitor_exit,
-  //   process_monitor_input,
-  //   process_monitor_render,
-  //   NULL
-  // );
 
   runProcess(
     generateProcess(
@@ -76,7 +63,7 @@ void setup() {
   home_add_item(
     "Processes",
     generateProcess(
-      1,
+      100,
       process_monitor_init,
       process_monitor_tick,
       process_monitor_exit,
@@ -84,22 +71,29 @@ void setup() {
       process_monitor_render
     )
   );
+
+  home_add_item(
+    "Power Manager",
+    generateProcess(
+      50,
+      power_manager_init,
+      power_manager_tick,
+      power_manager_exit,
+      power_manager_input,
+      power_manager_render
+    )
+  );
+
   home_add_item(
     "other process",
     dummyProcessInfo
   );
-  
-  // runProcessWithoutDealloc(
-  //   dummyProcessInfo
-  // );
-  // runProcessWithoutDealloc(
-  //   dummyProcessInfo
-  // );
-  // runProcess(
-  //   dummyProcessInfo
-  // );
 
-  power_init_pin(0, 1000, false);
+  power_init_pin(7, 1000, false);
+
+  // testing
+  // power_init_pin(6, 1000, false);
+  // power_use(6);
 }
 
 unsigned long offset = 2000;
@@ -128,8 +122,6 @@ void loop() {
         break;
     }
   }
-
-  delay(10);
 }
 
 void dummy_init(Process* process) { dummy_id = process->getId(); }
