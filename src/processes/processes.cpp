@@ -36,39 +36,39 @@ bool process_monitor_exit(unsigned long millis) {
 }
 
 void process_monitor_input(uint8_t value) {
-    screen_keep_alive();
-    processes_remove_process->selectItem(0);
-    switch (value) {
-        case INPUTS_ARROW_UP:
-            processes_active_processes->scrollMenuItem(-1);
-            break;
-        case INPUTS_ARROW_DOWN:
-            processes_active_processes->scrollMenuItem(1);
-            break;
-        case INPUTS_SELECT: {
-            uint16_t id = processes_active_processes->selectMenuItem();
-            switch (screen_get_state()) {
-                case 0: {
-                    uint8_t menu_index = (id == processes_id) ? 2 : (id > MAX_ROOT_ID) ? 1 : 3;
-                    processes_remove_process->selectItem(menu_index);
-                    screen_set_state(1);
-                    return;
-                }
-                case 1:
-                    if (id > MAX_ROOT_ID) closeProcess(id);
-                    else processes_remove_process->setText(" :root:");
-                    break;
-            }
-            break;
+  screen_keep_alive();
+  processes_remove_process->selectItem(0);
+  switch (value) {
+    case INPUTS_ARROW_UP:
+      processes_active_processes->scrollMenuItem(-1);
+      break;
+    case INPUTS_ARROW_DOWN:
+      processes_active_processes->scrollMenuItem(1);
+      break;
+    case INPUTS_SELECT: {
+      uint16_t id = processes_active_processes->selectMenuItem();
+      switch (screen_get_state()) {
+        case 0: {
+          uint8_t menu_index = (id == processes_id) ? 2 : (id > MAX_ROOT_ID) ? 1 : 3;
+          processes_remove_process->selectItem(menu_index);
+          screen_set_state(1);
+          return;
         }
-        case INPUTS_ESCAPE:
-            if (screen_get_state() == 1) {
-                prevent_default_exit();
-                processes_remove_process->selectItem(4);
-            }
-            break;
+        case 1:
+          if (id > MAX_ROOT_ID) closeProcess(id, true); // [true] = force deletion
+          else processes_remove_process->setText(" :root:");
+          break;
+      }
+      break;
     }
-    screen_set_state(0);
+    case INPUTS_ESCAPE:
+      if (screen_get_state() == 1) {
+        prevent_default_exit();
+        processes_remove_process->selectItem(4);
+      }
+      break;
+  }
+  screen_set_state(0);
 }
 
 void process_monitor_render(bool is_rendering) {

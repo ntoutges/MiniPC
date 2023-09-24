@@ -1,4 +1,5 @@
 #include "ScreenComponent.h"
+#include "Arduino.h"
 
 ScreenComponent::ScreenComponent(
   uint8_t x,
@@ -78,6 +79,27 @@ void ScreenComponent::setText(char* text) {
   // fill rest of characters with ' ' (32)
   for (uint8_t i = data_index; i < length; i++) {
     setCharAt(i, 32);
+  }
+}
+
+void ScreenComponent::scrollText(int8_t step) {
+  if (step == 0) return; // nothing happens
+  m_has_changed = true;
+  if (step < 0) { // scroll left
+    if (step <= -m_width) { // all text scrolls off screen
+      setText("");
+      return;
+    }
+    for (uint8_t i = 0; i < m_size + step; i++) { setCharAt(i, m_data[i - step]); }
+    for (uint8_t i = m_size + step; i < m_size; i++) { setCharAt(i, ' '); }
+  }
+  else { // scroll right
+    if (step >= m_width) { // all text scrolls off screen
+      setText("");
+      return;
+    }
+    for (int8_t i = m_size - step - 1; i >= 0; i--) { setCharAt(i+step, m_data[i]); }
+    for (uint8_t i = 0; i < step; i++) { setCharAt(i, ' '); }
   }
 }
 

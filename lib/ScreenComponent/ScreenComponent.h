@@ -30,6 +30,7 @@ class ScreenComponent {
   void setCharAt(uint8_t x, uint8_t y, char character);
   void setCharAt(uint8_t index, char character);
   void setText(char* text);
+  void scrollText(int8_t step);
   
   uint8_t size();
   uint8_t width();

@@ -11,45 +11,50 @@
 
 class Process {
 private:
-    uint16_t m_process_id;
-    uint16_t m_delay;
-    uint16_t m_delay_tracker;
+  uint16_t m_process_id;
+  uint16_t m_delay;
+  uint16_t m_delay_tracker;
 
-    bool m_is_initialized;
+  bool m_is_initialized;
+  bool m_force_end;
 
-    void (*m_init)(Process*);
-    void (*m_tick)(unsigned long millis);
-    bool (*m_exit)(unsigned long millis);
-    void (*m_input)(uint8_t value);
-    void (*m_render)(bool is_rendering);
+  void (*m_init)(Process*);
+  void (*m_tick)(unsigned long millis);
+  bool (*m_exit)(unsigned long millis);
+  void (*m_input)(uint8_t value);
+  void (*m_render)(bool is_rendering);
 
 public:
-    Process(
-        uint16_t process_id,
-        uint16_t delay,
-        void (*init)(Process*),
-        void (*tick)(unsigned long millis),
-        bool (*exit)(unsigned long millis)
-    );
-    Process(
-        uint16_t process_id,
-        uint16_t delay,
-        void (*init)(Process*),
-        void (*tick)(unsigned long millis),
-        bool (*exit)(unsigned long millis),
-        void (*input)(uint8_t value),
-        void (*render)(bool is_rendering) // this is only called when rendering status is changed
-    );
+  Process(
+    uint16_t process_id,
+    uint16_t delay,
+    void (*init)(Process*),
+    void (*tick)(unsigned long millis),
+    bool (*exit)(unsigned long millis)
+  );
+  Process(
+    uint16_t process_id,
+    uint16_t delay,
+    void (*init)(Process*),
+    void (*tick)(unsigned long millis),
+    bool (*exit)(unsigned long millis),
+    void (*input)(uint8_t value),
+    void (*render)(bool is_rendering) // this is only called when rendering status is changed
+  );
 
-    uint16_t getId();
-    bool isTickable();
-    bool hasGUI();
+  uint16_t getId();
+  bool isTickable();
+  bool hasGUI();
 
-    void init(Process* process);
-    void tick(unsigned long millis);
-    void render(bool is_rendering);
-    bool exit(unsigned long millis);
-    void input(uint8_t value);
+  void setForceDeletion(bool force);
+
+  void init(Process* process);
+  void tick(unsigned long millis);
+  void render(bool is_rendering);
+  bool exit(unsigned long millis);
+  void input(uint8_t value);
+
+  void* getTickRef(); // returns a pointer to the
 
 private:
     void init(
@@ -99,6 +104,7 @@ Process* runProcess(ProcessInfo* processInfo);
 Process* runProcessWithoutDealloc(ProcessInfo* processInfo); // (this doesn't do any freeing)
 
 void closeProcess(uint16_t id);
+void closeProcess(uint16_t id, bool force);
 void _removeProcess(uint16_t id);
 Process* _getLastGUIProcess();
 

@@ -67,9 +67,10 @@ void power_tick(unsigned long millis) {
 }
 
 bool power_exit(unsigned long millis) {
-    // destroy_flags(power_flags);
-    // destroy_flags(power_flags_buffer);
-    // destroy_flags(power_is_inverted);
+  // destroy_flags(power_flags);
+  // destroy_flags(power_flags_buffer);
+  // destroy_flags(power_is_inverted);
+  return true;
 }
 
 void power_set(size_t pin, bool enabled) { // not currently switching, change can occur

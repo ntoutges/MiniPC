@@ -6,6 +6,8 @@
 #include "utils/inputs.h"
 #include "processes/home.h"
 #include "processes/powerManager.h"
+#include "processes/passThru.h"
+#include "processes/plotter.h"
 
 // TODO: figure out why random text starts appearing on screen (likely to do with linked list or supervisor)
 
@@ -20,6 +22,7 @@ void dummy_render(bool is_rendering);
 ProcessInfo* dummyProcessInfo;
 void setup() {
   Serial.begin(115200);
+  Serial1.begin(38400);
   supervisor_init(1);
 
   runProcess(
@@ -85,11 +88,36 @@ void setup() {
   );
 
   home_add_item(
+    "PassThru",
+    generateProcess(
+      10,
+      passthru_init,
+      passthru_tick,
+      passthru_exit,
+      passthru_input,
+      passthru_render
+    )
+  );
+
+  home_add_item(
+    "Plotter",
+    generateProcess(
+      1,
+      plotter_init,
+      plotter_tick,
+      plotter_exit,
+      plotter_input,
+      plotter_render
+    )
+  );
+
+  home_add_item(
     "other process",
     dummyProcessInfo
   );
 
   power_init_pin(7, 1000, false);
+  power_init_pin(6, 5000, false);
 
   // testing
   // power_init_pin(6, 1000, false);
@@ -101,7 +129,8 @@ int stage = 0;
 void loop() {
   supervisor_tick(millis());
   if (Serial.available()) {
-    switch (Serial.read()) {
+    uint8_t val = Serial.read();
+    switch (val) {
       case 'w':
         supervisor_input(INPUTS_ARROW_UP);
         break;
@@ -114,11 +143,17 @@ void loop() {
       case 'd':
         supervisor_input(INPUTS_ARROW_RIGHT);
         break;
-      case 13: // enter
+      case 10: // enter
+      case 32: // space also works for select
         supervisor_input(INPUTS_SELECT);
+        break;
+      case 13: // \r -> ignore this
         break;
       case 'q':
         supervisor_input(INPUTS_ESCAPE);
+        break;
+      default:
+        supervisor_input(val);
         break;
     }
   }
